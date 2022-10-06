@@ -77,13 +77,12 @@ public class Ticket {
 
     @Override
     public String toString() {
-        return "Ticket{" +
-                "ticketId=" + ticketId +
-                ", employeeId=" + employeeId +
-                ", amount=" + amount +
-                ", description='" + description + '\'' +
-                ", status=" + status +
-                '}';
+        return "Ticket number " +
+                 ticketId +
+                "\nEmployeeId: " + employeeId +
+                "\nAmount: " + amount +
+                "\nDescription: '" + description + '\'' +
+                "\nStatus: " + status;
     }
 
 }
