@@ -20,6 +20,11 @@ public class Employee {
         this.manager = manager;
     }
 
+    public Employee(String username, String password) {
+        this.username = username;
+        this.password = password;
+    }
+
     public Employee(int employeeId) {
         this.employeeId = employeeId;
     }

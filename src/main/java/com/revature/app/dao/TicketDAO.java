@@ -12,5 +12,7 @@ public interface TicketDAO {
 
     List<Ticket> getTicketsByEmployeeId(int id);
 
-    boolean updateTicket(Ticket ticket);
+    boolean updateTicket(int ticketId, String status, int resolvedby, String reason);
+
+    List<Ticket> getPendingTickets();
 }

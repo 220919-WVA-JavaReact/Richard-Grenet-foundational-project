@@ -18,4 +18,10 @@ public class TicketService {
         return td.createTicket(empId,amount,description);
     }
 
+    public boolean updateTicket(int ticketId, String status, int resolvedby, String reason){
+        return td.updateTicket(ticketId, status, resolvedby, reason);
+    }
+
+    public List<Ticket> getPendingTickets() { return td.getPendingTickets();}
+
 }

@@ -8,5 +8,5 @@ public interface EmployeeDAO {
 
     Employee createEmployee(String first, String last, String username,
                              String password, Boolean manager);
-
+    Employee updateEmployee(Employee e);
 }

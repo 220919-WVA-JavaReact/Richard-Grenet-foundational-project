@@ -4,6 +4,7 @@ import com.revature.app.models.Employee;
 import com.revature.app.models.Ticket;
 import com.revature.app.util.ConnectionUtil;
 
+import javax.xml.transform.Result;
 import java.sql.*;
 
 public class EmployeeDAOimpl implements EmployeeDAO{
@@ -67,7 +68,7 @@ public class EmployeeDAOimpl implements EmployeeDAO{
                     String sql3 = "SELECT * FROM employees WHERE username = ?";
                     PreparedStatement stat3 = conn.prepareStatement(sql3);
                     stat.setString(1, username);
-                    ResultSet rs3 = stat.executeQuery();
+                    ResultSet rs3 = stat3.executeQuery();
                     rs3.next();
 
                     int empId = rs3.getInt("employee_id");
@@ -93,5 +94,23 @@ public class EmployeeDAOimpl implements EmployeeDAO{
 
 
         return null;
+    }
+
+    @Override
+    public Employee updateEmployee(Employee emp) {
+
+        try (Connection conn = ConnectionUtil.getConnection()){
+            String sql = "UPDATE employees SET manager=? WHERE employee_id=?";
+            PreparedStatement stat = conn.prepareStatement(sql);
+            stat.setBoolean(1,emp.isManager());
+            stat.setInt(2,emp.getEmployeeId());
+            int rs = stat.executeUpdate();
+            if(rs == 1){
+                return emp;
+            }
+        }catch(SQLException e){
+            e.printStackTrace();
+        }
+        return emp;
     }
 }
