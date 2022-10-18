@@ -52,8 +52,12 @@ public class EmployeeDAOimpl implements EmployeeDAO{
             PreparedStatement stat = conn.prepareStatement(sql);
             //set individual values for ? makes
             stat.setString(1, username);
+            System.out.println("[LOG] - Executing query to see if username is not already taken...");
             ResultSet rs = stat.executeQuery();
+
+            System.out.println("[LOG] - Result of query is: "+ rs.toString());
             if(!rs.next()){
+                stat.close();
                 String sql2 = "INSERT INTO employees (\"first\", \"last\", username, \"password\", manager)" +
                         "VALUES (?,?,?,?,?)";
                 PreparedStatement stat2 = conn.prepareStatement(sql2);
@@ -62,15 +66,18 @@ public class EmployeeDAOimpl implements EmployeeDAO{
                 stat2.setString(3,username);
                 stat2.setString(4,password);
                 stat2.setBoolean(5,manager);
+                System.out.println("[LOG] - Executing update to place new user in database...");
                 int rs2 = stat2.executeUpdate();
-                System.out.println(rs2);
+                System.out.println("[LOG] - Result of update is: "+ rs2);
                 if(rs2 == 1){
+                    stat2.close();
                     String sql3 = "SELECT * FROM employees WHERE username = ?";
                     PreparedStatement stat3 = conn.prepareStatement(sql3);
-                    stat.setString(1, username);
+                    stat3.setString(1, username);
                     ResultSet rs3 = stat3.executeQuery();
+                    System.out.println(rs3);
                     rs3.next();
-
+                    System.out.println(rs3);
                     int empId = rs3.getInt("employee_id");
                     String frst = rs3.getString("first");
                     String lst = rs3.getString("last");

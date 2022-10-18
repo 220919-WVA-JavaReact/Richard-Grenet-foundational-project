@@ -34,7 +34,7 @@ public class EmployeeServlet extends HttpServlet {
         // Employee someUser = new Employee(123,"jane","Doe", "jdoe33","password123",false);
         //want to convert to json.
         System.out.println(req.getQueryString());
-        if(req.getQueryString().equals("action=login")) {
+        if(req.getParameter("action").equals("login")) {
 
             HashMap<String, String> info = mapper.readValue(req.getInputStream(), HashMap.class);
             Employee result = es.login(info.get("username"), info.get("password"));
@@ -42,7 +42,8 @@ public class EmployeeServlet extends HttpServlet {
                 System.out.println(result);
                 HttpSession session = req.getSession();
                 session.setAttribute("current-user", result);
-                resp.setStatus(204);
+                resp.setStatus(200);
+                resp.getWriter().write("Successfully logged in");
                 return;
             }
             resp.setStatus(400);
@@ -53,16 +54,22 @@ public class EmployeeServlet extends HttpServlet {
             errorMessage.put("Timestamp", LocalDateTime.now().toString());
             resp.getWriter().write(mapper.writeValueAsString(errorMessage));
 
-        } else if (req.getQueryString().equals("action=logout")){
+        } else if (req.getParameter("action").equals("logout")){
 
             HttpSession session = req.getSession(false);
 
             if(session != null){
                 System.out.println(session.getAttribute("current-user"));
                 session.invalidate();
+            } else {
+                //this block is for when someone tries to logout without being logged in
+                resp.setStatus(400);
+                resp.getWriter().write("Not logged in");
+                return;
             }
 
-            resp.setStatus(204);
+            resp.setStatus(200);
+            resp.getWriter().write("Logged out successfully");
         }
     }
 
@@ -75,9 +82,9 @@ public class EmployeeServlet extends HttpServlet {
         //service layer, then dao layer, then database.
         for(String keys: newUser.keySet()){
             System.out.println(newUser.get(keys));
-            System.out.println(newUser.get(keys).getClass());
         }
         Employee newAcc = es.register(newUser.get("first"),newUser.get("last"),newUser.get("username"),newUser.get("password"),Boolean.parseBoolean(newUser.get("manager")));
+        System.out.println(newAcc);
         if(newAcc != null){
         resp.setStatus(200);
         resp.setContentType("application/json");

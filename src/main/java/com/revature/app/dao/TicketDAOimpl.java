@@ -106,8 +106,11 @@ public class TicketDAOimpl implements TicketDAO{
             PreparedStatement statCheck = conn.prepareStatement(checkPending);
             statCheck.setInt(1,ticketId);
             ResultSet rsC;
+            System.out.println("[LOG] - Executing query to see current ticket status in database...");
             if((rsC = statCheck.executeQuery()) != null){
+                rsC.next();
                 String statusPre = rsC.getString("status");
+                System.out.println("[LOG] - Result of querying ticket - current ticket status: " + statusPre);
                 if(statusPre.equals("DENIED") || statusPre.equals("APPROVED")) return false;
             }
 
@@ -118,8 +121,8 @@ public class TicketDAOimpl implements TicketDAO{
             stat.setInt(2,1); // TODO need to either code in resolvedby field to java, remove from sql, or otherwise decide what to do with it.
             stat.setString(3,"reasongoeshere"); // TODO same for reason...
             stat.setInt(4, ticketId);
-            int rs;
-            if((rs = stat.executeUpdate()) == 1){
+            int rs = stat.executeUpdate();
+            if(rs == 1){
                 return true;
             }
 
@@ -133,7 +136,7 @@ public class TicketDAOimpl implements TicketDAO{
     public List<Ticket> getPendingTickets() {
         List<Ticket> tickets = new ArrayList<>();
         try( Connection conn = ConnectionUtil.getConnection()){
-            String sql = "SELECT * FROM tickets WHERE status = PENDING";
+            String sql = "SELECT * FROM tickets WHERE status LIKE 'PENDING'";
             Statement stat = conn.createStatement();
             ResultSet rs = stat.executeQuery(sql);
 

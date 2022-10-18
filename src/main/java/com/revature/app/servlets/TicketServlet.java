@@ -41,13 +41,13 @@ public class TicketServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         HttpSession session = req.getSession(false);
         if (session == null) {
-            resp.setStatus(402);
+            resp.setStatus(401);
             resp.setContentType("application/json");
 
 
             HashMap<String, Object> errorMessage = new HashMap<>();
 
-            errorMessage.put("Status code", 402);
+            errorMessage.put("Status code", 401);
             errorMessage.put("Message", "Must be logged in to interact with tickets.");
             errorMessage.put("Timestamp", LocalDateTime.now().toString());
 
@@ -55,7 +55,7 @@ public class TicketServlet extends HttpServlet {
             return;
         }
         Employee info = (Employee) session.getAttribute("current-user");
-        if(req.getQueryString().equals("action=GETPENDING")) {
+        if(req.getParameter("action").equals("GETPENDING")) {
             //GET the list of PENDING tickets - for managers.
 
             if (!info.isManager()) {
@@ -78,7 +78,7 @@ public class TicketServlet extends HttpServlet {
 
 
             resp.getWriter().write(mapper.writeValueAsString(result));// TODO not tested yet. same with Update Ticket (doPut)
-        } else if (req.getQueryString().equals("action=SEEPREVIOUS")){
+        } else if (req.getParameter("action").equals("SEEPREVIOUS")){ // TODO can directly get params with req.getParam("action").equals("SEEPREVIOUS");
             //See your previously submitted tickets along with relevant info - for all users.
             List<Ticket> result = ts.getTickets(info.getEmployeeId());
             if(result != null){
@@ -106,13 +106,13 @@ public class TicketServlet extends HttpServlet {
         HttpSession session = req.getSession(false);
 
         if (session == null){
-            resp.setStatus(402);
+            resp.setStatus(401);
             resp.setContentType("application/json");
 
 
             HashMap<String, Object> errorMessage = new HashMap<>();
 
-            errorMessage.put("Status code", 402);
+            errorMessage.put("Status code", 401);
             errorMessage.put("Message", "Must be logged in to submit a ticket.");
             errorMessage.put("Timestamp", LocalDateTime.now().toString());
 
@@ -163,7 +163,7 @@ public class TicketServlet extends HttpServlet {
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         //APPROVE or DENY a ticket - for managers.
-        HttpSession session = req.getSession(false);
+        HttpSession session = req.getSession(false); // TODO make the return value equal to the pendingtickets list.
 
 
         if (session == null){
@@ -218,9 +218,10 @@ public class TicketServlet extends HttpServlet {
             resp.setStatus(200);
             resp.setContentType("application/json");
             HashMap<String, Object> message = new HashMap<>();
-            message.put("Status code", 200);
-            message.put("Message", "Successfully " + ticketInfo.get("status") + " request number " + ticketInfo.get("ticketId"));
             message.put("Timestamp", LocalDateTime.now().toString());
+            message.put("Message", "Successfully " + ticketInfo.get("status") + " request number " + ticketInfo.get("ticketId"));
+            List<Ticket> res = ts.getPendingTickets();
+            message.put("Remaining PENDING tickets", res);
 
             resp.getWriter().write(mapper.writeValueAsString(message));
             return;
