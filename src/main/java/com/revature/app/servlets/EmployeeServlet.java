@@ -31,10 +31,16 @@ public class EmployeeServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         //LOGIN/LOGOUT USER
-        // Employee someUser = new Employee(123,"jane","Doe", "jdoe33","password123",false);
-        //want to convert to json.
         System.out.println(req.getQueryString());
         if(req.getParameter("action").equals("login")) {
+
+            HttpSession sessionC = req.getSession(false);
+
+            if(sessionC != null){
+                resp.setStatus(400);
+                resp.getWriter().write("Already logged in");
+                return;
+            }
 
             HashMap<String, String> info = mapper.readValue(req.getInputStream(), HashMap.class);
             Employee result = es.login(info.get("username"), info.get("password"));
@@ -75,7 +81,60 @@ public class EmployeeServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        //LOGIN/LOGOUT USER
+        System.out.println(req.getQueryString());
+        if(req.getParameter("action").equals("login")) {
+
+            HttpSession sessionC = req.getSession(false);
+
+            if(sessionC != null){
+                resp.setStatus(400);
+                resp.getWriter().write("Already logged in");
+                return;
+            }
+
+            HashMap<String, String> info = mapper.readValue(req.getInputStream(), HashMap.class);
+            Employee result = es.login(info.get("username"), info.get("password"));
+            if (result != null) {
+                System.out.println(result);
+                HttpSession session = req.getSession();
+                session.setAttribute("current-user", result);
+                resp.setStatus(200);
+                resp.getWriter().write("Successfully logged in");
+                return;
+            }
+            resp.setStatus(400);
+            resp.setContentType("application/json");
+            HashMap<String, Object> errorMessage = new HashMap<>();
+            errorMessage.put("Status code", 400);
+            errorMessage.put("Message", "Invalid credentials!");
+            errorMessage.put("Timestamp", LocalDateTime.now().toString());
+            resp.getWriter().write(mapper.writeValueAsString(errorMessage));
+
+        } else if (req.getParameter("action").equals("logout")){
+
+            HttpSession session = req.getSession(false);
+
+            if(session != null){
+                System.out.println(session.getAttribute("current-user"));
+                session.invalidate();
+            } else {
+                //this block is for when someone tries to logout without being logged in
+                resp.setStatus(400);
+                resp.getWriter().write("Not logged in");
+                return;
+            }
+
+            resp.setStatus(200);
+            resp.getWriter().write("Logged out successfully");
+        }
         // REGISTER NEW ACCOUNT.
+        HttpSession sessionC = req.getSession(false);
+        if(sessionC != null){
+            resp.setStatus(400);
+            resp.getWriter().write("Already logged in");
+            return;
+        }
         System.out.println("[LOG] - UserServlet received a request at " + LocalDateTime.now());
         HashMap<String,String> newUser = mapper.readValue(req.getInputStream(), HashMap.class);
         //at this point can user newUser as a normal java object. Send to

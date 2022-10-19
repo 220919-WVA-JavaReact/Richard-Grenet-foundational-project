@@ -77,8 +77,8 @@ public class TicketServlet extends HttpServlet {
             resp.setContentType("application/json");
 
 
-            resp.getWriter().write(mapper.writeValueAsString(result));// TODO not tested yet. same with Update Ticket (doPut)
-        } else if (req.getParameter("action").equals("SEEPREVIOUS")){ // TODO can directly get params with req.getParam("action").equals("SEEPREVIOUS");
+            resp.getWriter().write(mapper.writeValueAsString(result));
+        } else if (req.getParameter("action").equals("SEEPREVIOUS")){
             //See your previously submitted tickets along with relevant info - for all users.
             List<Ticket> result = ts.getTickets(info.getEmployeeId());
             if(result != null){
@@ -163,7 +163,7 @@ public class TicketServlet extends HttpServlet {
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         //APPROVE or DENY a ticket - for managers.
-        HttpSession session = req.getSession(false); // TODO make the return value equal to the pendingtickets list.
+        HttpSession session = req.getSession(false);
 
 
         if (session == null){
@@ -182,6 +182,7 @@ public class TicketServlet extends HttpServlet {
         }
         Employee info = (Employee) session.getAttribute("current-user");
         HashMap<String, String> ticketInfo = mapper.readValue(req.getInputStream(), HashMap.class);
+
         if (!info.isManager()){
             resp.setStatus(400);
             resp.setContentType("application/json");

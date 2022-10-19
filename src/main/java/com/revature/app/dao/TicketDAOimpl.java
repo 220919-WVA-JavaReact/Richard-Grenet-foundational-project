@@ -118,8 +118,8 @@ public class TicketDAOimpl implements TicketDAO{
 
             PreparedStatement stat = conn.prepareStatement(sql);
             stat.setString(1,status);
-            stat.setInt(2,1); // TODO need to either code in resolvedby field to java, remove from sql, or otherwise decide what to do with it.
-            stat.setString(3,"reasongoeshere"); // TODO same for reason...
+            stat.setInt(2,1);
+            stat.setString(3,"reasongoeshere");
             stat.setInt(4, ticketId);
             int rs = stat.executeUpdate();
             if(rs == 1){
