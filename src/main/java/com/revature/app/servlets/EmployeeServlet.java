@@ -59,6 +59,7 @@ public class EmployeeServlet extends HttpServlet {
             errorMessage.put("Message", "Invalid credentials!");
             errorMessage.put("Timestamp", LocalDateTime.now().toString());
             resp.getWriter().write(mapper.writeValueAsString(errorMessage));
+            return;
 
         } else if (req.getParameter("action").equals("logout")){
 
@@ -76,6 +77,7 @@ public class EmployeeServlet extends HttpServlet {
 
             resp.setStatus(200);
             resp.getWriter().write("Logged out successfully");
+            return;
         }
     }
 
@@ -103,13 +105,14 @@ public class EmployeeServlet extends HttpServlet {
                 resp.getWriter().write("Successfully logged in");
                 return;
             }
-            resp.setStatus(400);
             resp.setContentType("application/json");
             HashMap<String, Object> errorMessage = new HashMap<>();
             errorMessage.put("Status code", 400);
             errorMessage.put("Message", "Invalid credentials!");
             errorMessage.put("Timestamp", LocalDateTime.now().toString());
             resp.getWriter().write(mapper.writeValueAsString(errorMessage));
+            resp.setStatus(400);
+            return;
 
         } else if (req.getParameter("action").equals("logout")){
 
@@ -118,15 +121,16 @@ public class EmployeeServlet extends HttpServlet {
             if(session != null){
                 System.out.println(session.getAttribute("current-user"));
                 session.invalidate();
+                resp.setStatus(200);
+                resp.getWriter().write("Logged out successfully");
             } else {
                 //this block is for when someone tries to logout without being logged in
                 resp.setStatus(400);
                 resp.getWriter().write("Not logged in");
-                return;
             }
+            return;
 
-            resp.setStatus(200);
-            resp.getWriter().write("Logged out successfully");
+
         }
         // REGISTER NEW ACCOUNT.
         HttpSession sessionC = req.getSession(false);
@@ -159,10 +163,10 @@ public class EmployeeServlet extends HttpServlet {
         resp.getWriter().write(mapper.writeValueAsString(message));
         return;
         }
-        resp.setStatus(400);
+        resp.setStatus(409);
         resp.setContentType("application/json");
         HashMap<String, Object> errorMessage = new HashMap<>();
-        errorMessage.put("Status code", 400);
+        errorMessage.put("Status code", 409);
         errorMessage.put("Message", "Username was already taken!");
         errorMessage.put("Timestamp", LocalDateTime.now().toString());
 

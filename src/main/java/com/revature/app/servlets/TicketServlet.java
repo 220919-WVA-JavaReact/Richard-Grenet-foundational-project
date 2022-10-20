@@ -238,7 +238,7 @@ public class TicketServlet extends HttpServlet {
             errorMessage.put("Timestamp", LocalDateTime.now().toString());
 
             resp.getWriter().write(mapper.writeValueAsString(errorMessage));
-            return;
+            return;//TODO do some of the extra stuff, practice presenting. Convert isManager to accessLevel
         }
     }
 }
