@@ -22,4 +22,8 @@ public class EmployeeService {
     }
 
 
+    public Employee changeRole(int employeeId, boolean newRole) {
+        Employee result = ed.updateEmployee(employeeId, newRole);
+        return result;
+    }
 }

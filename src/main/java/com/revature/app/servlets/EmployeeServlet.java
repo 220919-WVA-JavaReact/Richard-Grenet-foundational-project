@@ -85,52 +85,54 @@ public class EmployeeServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         //LOGIN/LOGOUT USER
         System.out.println(req.getQueryString());
-        if(req.getParameter("action").equals("login")) {
+        if(req.getParameter("action")!=null){
+            if(req.getParameter("action").equals("login")) {
 
-            HttpSession sessionC = req.getSession(false);
+                HttpSession sessionC = req.getSession(false);
 
-            if(sessionC != null){
+                if(sessionC != null){
+                    resp.setStatus(400);
+                    resp.getWriter().write("Already logged in");
+                    return;
+                }
+
+                HashMap<String, String> info = mapper.readValue(req.getInputStream(), HashMap.class);
+                Employee result = es.login(info.get("username"), info.get("password"));
+                if (result != null) {
+                    System.out.println(result);
+                    HttpSession session = req.getSession();
+                    session.setAttribute("current-user", result);
+                    resp.setStatus(200);
+                    resp.getWriter().write("Successfully logged in");
+                    return;
+                }
+                resp.setContentType("application/json");
+                HashMap<String, Object> errorMessage = new HashMap<>();
+                errorMessage.put("Status code", 400);
+                errorMessage.put("Message", "Invalid credentials!");
+                errorMessage.put("Timestamp", LocalDateTime.now().toString());
+                resp.getWriter().write(mapper.writeValueAsString(errorMessage));
                 resp.setStatus(400);
-                resp.getWriter().write("Already logged in");
                 return;
-            }
 
-            HashMap<String, String> info = mapper.readValue(req.getInputStream(), HashMap.class);
-            Employee result = es.login(info.get("username"), info.get("password"));
-            if (result != null) {
-                System.out.println(result);
-                HttpSession session = req.getSession();
-                session.setAttribute("current-user", result);
-                resp.setStatus(200);
-                resp.getWriter().write("Successfully logged in");
+            } else if (req.getParameter("action").equals("logout")){
+
+                HttpSession session = req.getSession(false);
+
+                if(session != null){
+                    System.out.println(session.getAttribute("current-user"));
+                    session.invalidate();
+                    resp.setStatus(200);
+                    resp.getWriter().write("Logged out successfully");
+                } else {
+                    //this block is for when someone tries to logout without being logged in
+                    resp.setStatus(400);
+                    resp.getWriter().write("Not logged in");
+                }
                 return;
+
+
             }
-            resp.setContentType("application/json");
-            HashMap<String, Object> errorMessage = new HashMap<>();
-            errorMessage.put("Status code", 400);
-            errorMessage.put("Message", "Invalid credentials!");
-            errorMessage.put("Timestamp", LocalDateTime.now().toString());
-            resp.getWriter().write(mapper.writeValueAsString(errorMessage));
-            resp.setStatus(400);
-            return;
-
-        } else if (req.getParameter("action").equals("logout")){
-
-            HttpSession session = req.getSession(false);
-
-            if(session != null){
-                System.out.println(session.getAttribute("current-user"));
-                session.invalidate();
-                resp.setStatus(200);
-                resp.getWriter().write("Logged out successfully");
-            } else {
-                //this block is for when someone tries to logout without being logged in
-                resp.setStatus(400);
-                resp.getWriter().write("Not logged in");
-            }
-            return;
-
-
         }
         // REGISTER NEW ACCOUNT.
         HttpSession sessionC = req.getSession(false);
@@ -175,7 +177,94 @@ public class EmployeeServlet extends HttpServlet {
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        super.doPut(req, resp);
+        HttpSession session = req.getSession(false);
+
+
+        if (session == null){
+            resp.setStatus(401);
+            resp.setContentType("application/json");
+
+
+            HashMap<String, Object> errorMessage = new HashMap<>();
+
+            errorMessage.put("Status code", 401);
+            errorMessage.put("Message", "Must be logged in as a manager to promote or demote.");
+            errorMessage.put("Timestamp", LocalDateTime.now().toString());
+
+            resp.getWriter().write(mapper.writeValueAsString(errorMessage));
+            return;
+        }
+        Employee info = (Employee) session.getAttribute("current-user");
+        HashMap<String, String> updateInfo = mapper.readValue(req.getInputStream(), HashMap.class);
+
+        if (!info.isManager()){
+            resp.setStatus(403);
+            resp.setContentType("application/json");
+
+
+            HashMap<String, Object> errorMessage = new HashMap<>();
+
+            errorMessage.put("Status code", 403);
+            errorMessage.put("Message", "Must be a manager to promote or demote.");
+            errorMessage.put("Timestamp", LocalDateTime.now().toString());
+
+            resp.getWriter().write(mapper.writeValueAsString(errorMessage));
+            return;
+        }
+        if(!updateInfo.containsKey("employeeId") || updateInfo.get("employeeId").trim().equals("")){
+
+            resp.setStatus(400);
+            resp.setContentType("application/json");
+            HashMap<String, Object> errorMessage = new HashMap<>();
+            errorMessage.put("Status code", 400);
+            errorMessage.put("Message", "role change must have valid employeeId field.");
+            errorMessage.put("Timestamp", LocalDateTime.now().toString());
+            resp.getWriter().write(mapper.writeValueAsString(errorMessage));
+            return;
+        }
+        if(req.getParameter("action").equals("promote")){
+            Employee res = es.changeRole(Integer.parseInt(updateInfo.get("employeeId")),true);
+            resp.setStatus(200);
+            resp.setContentType("application/json");
+            HashMap<String, Object> message = new HashMap<>();
+            message.put("Status code", 200);
+            message.put("Message", "Promoted user "+ res.getUsername() +" to manager.");
+            message.put("Timestamp", LocalDateTime.now().toString());
+
+            resp.getWriter().write(mapper.writeValueAsString(message));
+        } else if(req.getParameter("action").equals("demote")){
+            Employee res = es.changeRole(Integer.parseInt(updateInfo.get("employeeId")),false);
+            if(Integer.parseInt(updateInfo.get("employeeId"))==(info.getEmployeeId())){
+                info.setManager(!info.isManager());
+                session.setAttribute("current-user", info);
+                resp.setStatus(200);
+                resp.setContentType("application/json");
+                HashMap<String, Object> message = new HashMap<>();
+                message.put("Status code", 200);
+                message.put("Message", "Demoted yourself "+ " to employee.");
+                message.put("Timestamp", LocalDateTime.now().toString());
+
+                resp.getWriter().write(mapper.writeValueAsString(message));
+            } else {
+                resp.setStatus(200);
+                resp.setContentType("application/json");
+                HashMap<String, Object> message = new HashMap<>();
+                message.put("Status code", 200);
+                message.put("Message", "Demoted user "+ res.getUsername() +" to employee.");
+                message.put("Timestamp", LocalDateTime.now().toString());
+
+                resp.getWriter().write(mapper.writeValueAsString(message));
+            }
+        } else{
+            resp.setStatus(400);
+            resp.setContentType("application/json");
+            HashMap<String, Object> errorMessage = new HashMap<>();
+            errorMessage.put("Status code", 400);
+            errorMessage.put("Message", "Action invalid.");
+            errorMessage.put("Timestamp", LocalDateTime.now().toString());
+            resp.getWriter().write(mapper.writeValueAsString(errorMessage));
+            return;
+        }
     }
 
     @Override

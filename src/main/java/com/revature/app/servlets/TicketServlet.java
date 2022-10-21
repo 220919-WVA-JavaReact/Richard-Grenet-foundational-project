@@ -122,7 +122,7 @@ public class TicketServlet extends HttpServlet {
         Employee info = (Employee) session.getAttribute("current-user");
         HashMap<String, String> ticketInfo = mapper.readValue(req.getInputStream(), HashMap.class);
         if(!ticketInfo.containsKey("amount") || !ticketInfo.containsKey("description")
-                || ticketInfo.get("amount") == null || ticketInfo.get("description").trim().equals("")){
+                || ticketInfo.get("amount") == null || ticketInfo.get("amount").trim().equals("0") || ticketInfo.get("description").trim().equals("")){
             resp.setStatus(400);
             resp.setContentType("application/json");
             HashMap<String, Object> errorMessage = new HashMap<>();
@@ -167,13 +167,13 @@ public class TicketServlet extends HttpServlet {
 
 
         if (session == null){
-            resp.setStatus(400);
+            resp.setStatus(401);
             resp.setContentType("application/json");
 
 
             HashMap<String, Object> errorMessage = new HashMap<>();
 
-            errorMessage.put("Status code", 400);
+            errorMessage.put("Status code", 401);
             errorMessage.put("Message", "Must be logged in to interact with ticket.");
             errorMessage.put("Timestamp", LocalDateTime.now().toString());
 
@@ -184,13 +184,13 @@ public class TicketServlet extends HttpServlet {
         HashMap<String, String> ticketInfo = mapper.readValue(req.getInputStream(), HashMap.class);
 
         if (!info.isManager()){
-            resp.setStatus(400);
+            resp.setStatus(403);
             resp.setContentType("application/json");
 
 
             HashMap<String, Object> errorMessage = new HashMap<>();
 
-            errorMessage.put("Status code", 400);
+            errorMessage.put("Status code", 403);
             errorMessage.put("Message", "Must be a manager to accept or deny ticket.");
             errorMessage.put("Timestamp", LocalDateTime.now().toString());
 
